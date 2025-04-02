@@ -1,9 +1,16 @@
 # Authors: Sonkgs; ChatGPT; André G. Teuber; jbviola
-# Version: 0.9
+# Version: Beta 0.9
 #
-# Aplicativo criado para censurar o direito de fala da população e de parlamentares da oposição 
+# Aplicativo criado para uso em uma câmara municipal, 
+# dando o controle dos microfones do público e dos outros vereadores ao presidente da comissão
+# haja vista que querem que o som seja cortado durante a suspensão da comissão e em outros momentos específicos, 
+# mas não há respando legal para que um técnico da casa corte o microfone de um vereador
+# O único registro formal que temos é de um vereador na tribuna dizendo que: "é inadmissível que um técnico da casa venha a cercear o direito de fala de um vereador"
+# 
 # Conecta-se à mesa de som Soundcraft UI24R e ativa/desativa as duas primeiras máscaras para desativar grupos de microfones
+# 
 # TODO: Criar um cronômetro que desative um microfone automaticamente ao fim do tempo inserido
+# TODO: Adicionar atualização em tempo real para receber informações da mesa de som
 
 import tkinter as tk
 from PIL import Image, ImageTk
@@ -28,7 +35,6 @@ PORT = 80
 
 # Função para conectar à mesa de som
 def conectar_mesa():
-    """Tenta conectar à mesa de som e retorna o socket."""
     try:
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((HOST, PORT))  # HOST já é global, sem necessidade de global aqui
@@ -39,7 +45,7 @@ def conectar_mesa():
         return None
 
 def obter_estado_atual():
-    """Obtém o estado atual da variável SETD^mgmask^."""
+    # Obtém o estado atual da variável SETD^mgmask^.
     if client:
         try:
             client.send(("GETD^mgmask^\n").encode())  # Solicita apenas mgmask
@@ -58,7 +64,7 @@ def obter_estado_atual():
     return 0  # Valor padrão caso falhe a leitura
 
 def enviar_comando(valor):
-    """Envia o valor correto da máscara."""
+    # Envia o valor correto da máscara. 
     if client:
         try:
             comando = f"SETD^mgmask^{valor}\n"
@@ -68,7 +74,7 @@ def enviar_comando(valor):
             print(f"Erro ao enviar comando: {e}")
 
 def atualizar_interface():
-    """Atualiza a interface gráfica de acordo com o estado da máscara."""
+    # Atualiza a interface gráfica de acordo com o estado da máscara.
     global estado1, estado2
     mgmask = obter_estado_atual()
 
@@ -79,19 +85,19 @@ def atualizar_interface():
     botao2.config(image=img2_on if estado2 else img2_off)
 
 def atualizar_mascara():
-    """Atualiza o valor da máscara baseado nos botões."""
+    # Atualiza o valor da máscara baseado nos botões.
     valor_mascara = (0 if estado1 else 1) + (0 if estado2 else 2) 
     enviar_comando(valor_mascara)
 
 def alternar_mascara1():
-    """Alterna estado da Máscara 1 e atualiza a interface."""
+    # Alterna estado da Máscara 1 e atualiza a interface.
     global estado1
     estado1 = not estado1
     botao1.config(image=img1_on if estado1 else img1_off)
     atualizar_mascara()
 
 def alternar_mascara2():
-    """Alterna estado da Máscara 2 e atualiza a interface."""
+    # Alterna estado da Máscara 2 e atualiza a interface.
     global estado2
     estado2 = not estado2
     botao2.config(image=img2_on if estado2 else img2_off)
@@ -99,7 +105,7 @@ def alternar_mascara2():
 
 # Função para abrir a caixa de configuração do IP
 def abrir_configuracao():
-    """Exibe a caixa de diálogo para o usuário inserir o IP da mesa de som."""
+    # Exibe a caixa de diálogo para o usuário inserir o IP da mesa de som.
     def salvar():
         ip = entry_ip.get()
         salvar_ip(ip)
